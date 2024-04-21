@@ -18,9 +18,12 @@ namespace TPS
         private TrapEffectType activatedEffects = TrapEffectType.None;
         private float fireTime = 0f;
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             Instance = this;
+
+            base.OnDamagedCallback += OnDamaged;
         }
 
         private void OnDestroy()
@@ -28,8 +31,10 @@ namespace TPS
             Instance = null;
         }
 
-        private void Update()
+        protected override void Update()
         {
+            base.Update();
+
             InputMovement();
             InputRotate();
 
@@ -48,7 +53,7 @@ namespace TPS
             // Effect Check & Update
             if (activatedEffects.HasFlag(TrapEffectType.Damage))
             {
-                HealthPoint -= 1f * Time.deltaTime;
+                Damage(1f * Time.deltaTime, 0f);
             }
 
             if (activatedEffects.HasFlag(TrapEffectType.Heal))
@@ -92,11 +97,21 @@ namespace TPS
                 direction.x += 1;
             }
 
+            bool isInputRunning = Input.GetKey(KeyCode.LeftShift);
+
             // Character Movement
             Vector3 moveDirection = Quaternion.Euler(0, Camera.main.transform.eulerAngles.y, 0)
                 * new Vector3(direction.x * MoveSpeed * Time.deltaTime, 0, direction.y * MoveSpeed * Time.deltaTime);
 
             transform.Translate(moveDirection, Space.World);
+
+            float magnitude = direction.normalized.magnitude;
+            bool isMoving = magnitude > 0;
+            characterAnimator.SetFloat("Speed", isInputRunning && isMoving ? 1f : isMoving ? 0.5f : 0f);
+            characterAnimator.SetFloat("Horizontal", direction.x);
+            characterAnimator.SetFloat("Vertical", direction.y);
+
+            base.onMoving(isMoving);
         }
 
         public void OnTriggerEnter(Collider other)
@@ -194,6 +209,13 @@ namespace TPS
         private void OnCollisionExit(Collision collision)
         {
             //Debug.Log("Character Collision Exit : " + collision.collider.name);
+        }
+
+        private void OnDamaged(float remainHealthPoint, float damage)
+        {
+            Debug.Log("Player Character Take Damage!! : " + damage + "Remain HP : " + remainHealthPoint);
+
+            IngameHUD.Instance.SetHealthPoint(remainHealthPoint / 100f);
         }
     }
 }

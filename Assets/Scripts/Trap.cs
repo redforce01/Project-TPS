@@ -32,7 +32,6 @@ namespace TPS
 
         public BoxCollider trapBox;
 
-
         private void Start()
         {
             // TrapSize Setup
