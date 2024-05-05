@@ -25,8 +25,9 @@ namespace CSP
             Instance = this;
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
             Instance = null;
         }
 

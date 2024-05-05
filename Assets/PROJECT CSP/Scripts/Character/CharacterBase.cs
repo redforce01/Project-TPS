@@ -2,11 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace CSP
 {
     public class CharacterBase : MonoBehaviour
     {
+        public static List<CharacterBase> AllCharacters = new List<CharacterBase>();
+
         public void OnDrawGizmos()
         {
             if (characterCollider != null)
@@ -16,6 +19,10 @@ namespace CSP
                     characterCollider.radius);
             }
         }
+
+
+        public bool IsSelected => isSelected;
+
 
         [field: Header("CharacterBase Settings")]
         [field: SerializeField] public float HealthPoint { get; set; } = 100f;
@@ -45,22 +52,60 @@ namespace CSP
         protected Rigidbody characterRigidbody;
         protected CapsuleCollider characterCollider;
         protected AnimatorEventMessanger animationMessanger;
+        protected NavMeshAgent navAgent;
 
         protected bool isGrounded = false;
         protected int attackCombo = 0;
 
+        protected GameObject selectionUI;
+        protected bool isSelected = false;
+
+        protected bool isRunning = false;
+
+        private Vector3 lastPosition = Vector3.zero;
 
         protected virtual void Awake()
         {
+            AllCharacters.Add(this);
+
+            var selectionUIPrefab = Resources.Load<GameObject>("SelectionUI");
+            selectionUI = Instantiate(selectionUIPrefab, transform);
+            selectionUI.transform.localPosition = new Vector3(0, 0.1f, 0f);
+            selectionUI.gameObject.SetActive(false);
+
             characterAnimator = GetComponentInChildren<Animator>();
             characterRigidbody = GetComponent<Rigidbody>();
             characterCollider = GetComponent<CapsuleCollider>();
             animationMessanger = GetComponentInChildren<AnimatorEventMessanger>();
+            navAgent = GetComponent<NavMeshAgent>();
+        }
+
+        protected virtual void OnDestroy()
+        {
+            AllCharacters.Remove(this);
         }
 
         protected virtual void Update()
         {
             CheckGround();
+
+            if (navAgent != null)
+            {
+                var velocity = navAgent.desiredVelocity;
+                float magnitude = velocity.magnitude;
+                bool isMoving = magnitude > 0;
+
+                Vector3 differ = lastPosition - transform.position;
+
+                characterAnimator.SetFloat("Speed", isRunning && isMoving ? 1f : isMoving ? 0.5f : 0f);
+                characterAnimator.SetFloat("Horizontal", differ.normalized.x);
+                characterAnimator.SetFloat("Vertical", differ.normalized.z);
+            }
+        }
+
+        protected virtual void LateUpdate()
+        {
+            lastPosition = transform.position;
         }
 
         private void CheckGround()
@@ -132,6 +177,18 @@ namespace CSP
         public void DamageExecute()
         {
 
+        }
+
+
+        public void SelectCharacter(bool isSelected)
+        {
+            this.isSelected = isSelected;
+            selectionUI.SetActive(isSelected);
+        }
+
+        public void SetDestination(Vector3 destination)
+        {
+            navAgent.SetDestination(destination);
         }
     }
 }
