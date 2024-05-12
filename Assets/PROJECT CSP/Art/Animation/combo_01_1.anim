@@ -76164,7 +76164,7 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.6
+  - time: 0.56666666
     functionName: ExecuteDamage
     data: 
     objectReferenceParameter: {fileID: 11500000, guid: 0c351fb05a1556d449777184dfce6a8a, type: 3}

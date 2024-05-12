@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -10,7 +11,7 @@ namespace CSP
     {
         public static List<CharacterBase> AllCharacters = new List<CharacterBase>();
 
-        public void OnDrawGizmos()
+        protected virtual void OnDrawGizmos()
         {
             if (characterCollider != null)
             {
@@ -22,6 +23,10 @@ namespace CSP
 
 
         public bool IsSelected => isSelected;
+
+        [field: Header("Unit Settings")]
+        [field: SerializeField] public bool IsPlayerUnit { get; set; } = false;
+
 
 
         [field: Header("CharacterBase Settings")]
@@ -61,8 +66,14 @@ namespace CSP
         protected bool isSelected = false;
 
         protected bool isRunning = false;
+        protected CharacterBase targetCharacter;
 
         private Vector3 lastPosition = Vector3.zero;
+        private bool isAgentMoved = false;
+
+        // Callback Events - On Started Destination
+        public System.Action OnDestinationStarted;
+        public System.Action OnDestinationReached;
 
         protected virtual void Awake()
         {
@@ -101,6 +112,8 @@ namespace CSP
                 characterAnimator.SetFloat("Horizontal", differ.normalized.x);
                 characterAnimator.SetFloat("Vertical", differ.normalized.z);
             }
+
+            CheckDestinationReached();
         }
 
         protected virtual void LateUpdate()
@@ -158,6 +171,11 @@ namespace CSP
             characterRigidbody.AddForce(Vector3.up * JumpForce, ForceMode.Force);
         }
 
+
+        public virtual void Attack() 
+        {
+        }
+
         public void DoLightAttack()
         {
             if (AttackCombo <= 0)
@@ -189,6 +207,27 @@ namespace CSP
         public void SetDestination(Vector3 destination)
         {
             navAgent.SetDestination(destination);
+
+            OnDestinationStarted?.Invoke();
+            isAgentMoved = true;
+        }
+
+        public void CheckDestinationReached()
+        {
+            if (isAgentMoved)
+            {
+                if (navAgent.remainingDistance > 0f && navAgent.remainingDistance <= navAgent.stoppingDistance)
+                {
+                    // Reached Destination
+                    isAgentMoved = false;
+                    OnDestinationReached?.Invoke();
+                }
+            }
+        }
+
+        public void ResetTarget()
+        {
+            targetCharacter = null;
         }
     }
 }

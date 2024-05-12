@@ -6,10 +6,11 @@ namespace CSP
 {
     public class AnimatorEventMessanger : MonoBehaviour
     {
+        public System.Action OnTriggeredExecuteDamage;
 
         public void ExecuteDamage()
         {
-            Debug.Log("ExecuteDamage");
+            OnTriggeredExecuteDamage?.Invoke();
         }
     }
 }

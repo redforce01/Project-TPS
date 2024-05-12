@@ -51,9 +51,10 @@ namespace CSP
                 {
                     foreach (var character in CharacterBase.AllCharacters)
                     {
-                        if (character.IsSelected)
+                        if (character.IsSelected && character.IsPlayerUnit)
                         {
                             character.SetDestination(hit.point);
+                            character.ResetTarget();
                         }
                     }
                 }

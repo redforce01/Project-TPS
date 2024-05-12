@@ -18,6 +18,8 @@ namespace CSP
             }
         }
 
+        public List<Collider> DetectedObjects => detectedObjects;
+
 
         public LayerMask detectionLayer;
         public string[] detectionTags;
@@ -31,6 +33,7 @@ namespace CSP
         private void Awake()
         {
             sensorCollider = GetComponent<SphereCollider>();
+            sensorCollider.isTrigger = true;
         }
 
         private void OnTriggerEnter(Collider other)
@@ -58,6 +61,7 @@ namespace CSP
                 }
             }
 
+            // 예외처리 : 자기 자신이랑 충돌 된거면은 제외시키기 위해서 빠져나갔음
             if (other.transform == transform.root)
             {
                 return;
@@ -74,6 +78,11 @@ namespace CSP
                 detectedObjects.Remove(other);
                 OnLostDetection?.Invoke(other);
             }
+        }
+
+        public void SetDetectionTags(string[] tags)
+        {
+            detectionTags = tags;
         }
     }
 }
